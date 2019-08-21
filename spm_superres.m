@@ -1,5 +1,5 @@
 function Nii_y = spm_superres(pths,opt)
-% Multi-channel total variation (MTV) denoising of MR data.
+% Multi-channel total variation (MTV) super-resolution of MR data.
 %
 % Requires that the SPM software is on the MATLAB path.
 % SPM is available from: https://www.fil.ion.ucl.ac.uk/spm/software/spm12/
@@ -44,6 +44,8 @@ spm_field('boundary',1)
 
 % scaling of regularisation parameter (lambda)
 if ~isfield(opt,'LamScl'),      opt.LamScl      = 10;           end  
+% scaling of step-size parameter (rho)
+if ~isfield(opt,'RhoScl'),      opt.RhoScl      = 0.5;          end  
 % Max number of iterations
 if ~isfield(opt,'MaxNiter'),    opt.MaxNiter    = 500;          end  
 % Newton iterations
@@ -62,12 +64,15 @@ if ~isfield(opt,'NumWorkers'),  opt.NumWorkers  = Inf;          end
 if ~isfield(opt,'Verbose'),     opt.Verbose     = true;         end  
 % Do preprocessing (register + reslice)
 if ~isfield(opt,'DoPreproc'),   opt.DoPreproc   = false;        end  
+% Do preprocessing (register)
+if ~isfield(opt,'DoCoReg'),     opt.DoCoReg     = false;        end  
 % Show one image, zoomed in
 if ~isfield(opt,'ShowZoomed'),  opt.ShowZoomed  = true;         end  
 % Different test-cases: 0. No testing, 1. brainweb, 2. lena, 3. qmri
 if ~isfield(opt,'testcase'),    opt.testcase    = 1;            end  
 
 LamScl      = opt.LamScl;
+RhoScl      = opt.RhoScl;
 MaxNiter    = opt.MaxNiter;
 NiterNewton = opt.NiterNewton;
 Tolerance   = opt.Tolerance;
@@ -77,6 +82,7 @@ Nii_y0      = opt.Nii_y0;
 NumWorkers  = opt.NumWorkers;
 Verbose     = opt.Verbose;
 DoPreproc   = opt.DoPreproc;
+DoCoReg     = opt.DoCoReg;
 ShowZoomed  = opt.ShowZoomed;
 
 %---------------------------
@@ -99,7 +105,7 @@ if opt.testcase && isempty(pths)
     end   
     imset.LenaNoiseStd = 5*1e1;  % For 'lena', std of additive Gaussian noise
     imset.BrainWebN    = 1;      % For 'brainweb', number of observations of each channel
-    imset.BrainWeb2D   = true;   % For 'brainweb', use 2D data
+    imset.BrainWeb2D   = true;  % For 'brainweb', use 2D data
     imset.qmriNumRuns  = 5;      % For 'qmri', number of runs to use
     imset.qmriNumC     = 22;     % For 'qmri', number of channels to use
     imset.qmri2D       = true;   % For 'qmri', use 2D data
@@ -118,40 +124,52 @@ else
     
     % Parse input
     Nii_x = parse_input(pths);
-    
+            
     if DoPreproc
         % Register and reslice input
         Nii_x = preproc_input(Nii_x,DirOut,NumWorkers);    
     end
 end
 
-% Get image properties
-C  = numel(Nii_x);                           % Number of channels
-vx = sqrt(sum(Nii_x{1}(1).mat(1:3,1:3).^2)); % Voxel sizes   
-dm = size(Nii_x{1}(1).dat);                  % Image size
-dm = [dm 1];
-nm = prod(dm);                               % Number of voxels     
-N = 0;
+%---------------------------
+% Estimate rigid alignment matrices
+%---------------------------
+
+R = coreg_input(Nii_x,DoCoReg);
+    
+%---------------------------
+% Get projection matrix struct and image properties
+%---------------------------
+
+[dat,dm,mat,vx] = get_dat(Nii_x,R);
+    
+C  = numel(Nii_x); % Number of channels
+nm = prod(dm);     % Number of voxels     
+N0 = 0;            % Total number of observations
 for c=1:C
-    N = N + numel(Nii_x{c});
+    N0 = N0 + numel(Nii_x{c});
 end
 
 % Show input
 show_stuff(Nii_y0,'y',1,Verbose,ShowZoomed);
-show_stuff(Nii_x, ['x (C=' num2str(C) ' N=' num2str(N) ')'],2,Verbose,ShowZoomed);
-                          
+if dat(1).A(1).do_pm
+    show_stuff(Nii_x, ['x (C=' num2str(C) ' N=' num2str(N0) ')'],2,Verbose,true);
+else
+    show_stuff(Nii_x, ['x (C=' num2str(C) ' N=' num2str(N0) ')'],2,Verbose,ShowZoomed);
+end
+
 %---------------------------
 % Estimate model parameters
 %---------------------------
 
-[tau,lam,rho] = estimate_model_parameters(Nii_x,LamScl,NumWorkers,Verbose);
+[tau,lam,rho] = estimate_model_parameters(Nii_x,LamScl,RhoScl,NumWorkers,Verbose);
 
 %---------------------------
 % Init variables (creates a load of niftis that will be deleted at end of
 % algorithm)
 %---------------------------
     
-[Nii_y,Nii_z,Nii_w,Nii_Dy] = alloc_vars(Nii_x,dm,DirOut,Verbose);
+[Nii_y,Nii_z,Nii_w,Nii_Dy,Nii_H] = alloc_vars(Nii_x,dm,mat,DirOut,Verbose);
 
 %---------------------------
 % Run algorithm 
@@ -170,7 +188,7 @@ for it=1:MaxNiter
     %---------------------------
     
     parfor (c=1:C,NumWorkers)
-        
+%     for c=1:C, fprintf('OBS: for!\n')
         N = numel(Nii_x{c});
         for it1=1:NiterNewton
                     
@@ -185,24 +203,38 @@ for it=1:MaxNiter
             % Conditional part (mask)
             for n=1:N                
                 % Mask missing data
-                x   = get_nii(Nii_x{c}(n));
-                msk = get_msk(x);
-
+                x     = get_nii(Nii_x{c}(n));
+                msk   = get_msk(x);
+                datcn = dat(c).A(n);
+                
                 % Gradient part
-                gr1       = tau{c}(n)*(y - x);
+                gr1       = tau{c}(n)*pm('At',(pm('A',y,datcn) - x),datcn);
                 gr1(~msk) = 0;
                 gr        = gr + gr1;
                 x         = [];
                 
                 % Hessian part
-                H1       = tau{c}(n)*ones(dm,'single');
-                H1(~msk) = 0;               
-                H        = H + H1;
+                if it == 1 && NiterNewton == 1
+                    % Compute only once (does not change)
+                    H1       = tau{c}(n)*pm('At',pm('A',ones(dm,'single'),datcn),datcn);
+                    H1(~msk) = 0;               
+                    H        = H + H1;
+                end
+                
+            end                        
+            gr1   = []; 
+            H1    = []; 
+            msk   = [];
+            datcn = [];
+            
+            if it == 1 && NiterNewton == 1
+                % Save Hessian
+                Nii_H{c} = put_nii(Nii_H{c},H);
+            else
+                % Load Hessian
+                H = get_nii(Nii_H{c});
             end
-            gr1 = []; 
-            H1  = []; 
-            msk = [];
-
+            
             gr = gr + diffoperator(w - rho*z,dm,vx,lam{c},'Dt');
             z  = [];
             w  = [];
@@ -298,7 +330,7 @@ for it=1:MaxNiter
     % Objective function
     %---------------------------
         
-    [~,~,dll] = get_ll(Nii_x,Nii_y,Nii_Dy,tau,NumWorkers);
+    [~,~,dll] = get_ll(Nii_x,Nii_y,Nii_Dy,tau,dat,NumWorkers);
     ll        = [ll, dll]; 
     diff1     = abs((ll(end) - ll(end - 1)));
     if Verbose
@@ -332,6 +364,7 @@ for c=1:C
     delete(Nii_z{c}.dat.fname);
     delete(Nii_w{c}.dat.fname);
     delete(Nii_Dy{c}.dat.fname);
+    delete(Nii_H{c}.dat.fname);
     if DoPreproc
         N = numel(Nii_x{c});
         for n=1:N
@@ -343,7 +376,7 @@ end
 
 %==========================================================================
 % alloc_vars()
-function [Nii_y,Nii_z,Nii_w,Nii_Dy] = alloc_vars(Nii_x,dm,DirOut,Verbose)
+function [Nii_y,Nii_z,Nii_w,Nii_Dy,Nii_H] = alloc_vars(Nii_x,dm,mat,DirOut,Verbose)
 if Verbose, fprintf('Allocating niftis...'); end
 
 if ~(exist(DirOut,'dir') == 7) 
@@ -356,33 +389,36 @@ Nii_y  = {nifti};
 Nii_z  = {nifti};
 Nii_w  = {nifti};    
 Nii_Dy = {nifti};   
+Nii_H  = {nifti}; 
 for c=1:C
     if isa(Nii_x{c}(1),'nifti')        
         f = Nii_x{c}(1).dat.fname;        
     else
         f = ['x' num2str(c) '.nii'];
     end
-    mat       = Nii_x{1}(1).mat;
     [pth,nam] = fileparts(f);
             
     if ~isempty(DirOut)
         pth = DirOut;
     end
     
-    fname_y  = fullfile(pth,['y' nam '.nii']);
-    fname_z  = fullfile(pth,['z' nam '.nii']); 
-    fname_w  = fullfile(pth,['w' nam '.nii']);
+    fname_y  = fullfile(pth,['y'  nam '.nii']);
+    fname_z  = fullfile(pth,['z'  nam '.nii']); 
+    fname_w  = fullfile(pth,['w'  nam '.nii']);
     fname_Dy = fullfile(pth,['Dy' nam '.nii']);
+    fname_H  = fullfile(pth,['H'  nam '.nii']);
 
     create_nii(fname_y,zeros(  dm(1:3),   'single'),mat,[spm_type('float32') spm_platform('bigend')],'y');
     create_nii(fname_z,zeros( [dm(1:3) 3],'single'),mat,[spm_type('float32') spm_platform('bigend')],'z');
     create_nii(fname_w,zeros( [dm(1:3) 3],'single'),mat,[spm_type('float32') spm_platform('bigend')],'w');
     create_nii(fname_Dy,zeros([dm(1:3) 3],'single'),mat,[spm_type('float32') spm_platform('bigend')],'Dy');
+    create_nii(fname_H,zeros(  dm(1:3),   'single'),mat,[spm_type('float32') spm_platform('bigend')],'H');
 
     Nii_y{c}  = nifti(fname_y);
     Nii_z{c}  = nifti(fname_z);
     Nii_w{c}  = nifti(fname_w);
     Nii_Dy{c} = nifti(fname_Dy);
+    Nii_H{c}  = nifti(fname_H);
 end
 if Verbose, fprintf('done!\n'); end
 %==========================================================================
@@ -434,9 +470,32 @@ out = single(out);
 %==========================================================================
 
 %==========================================================================
+% coreg_input()
+function R = coreg_input(Nii_x,DoCoReg,ref)
+if nargin < 3, ref = [1 1]; end
+
+C  = numel(Nii_x);
+Vr = spm_vol(Nii_x{ref(1)}(ref(2)).dat.fname);
+R  = cell(1,C);
+for c=1:C
+    N    = numel(Nii_x{c}); 
+    R{c} = cell(1,N);
+    for n=1:N
+        if (c == ref(1) && n == ref(2)) || ~DoCoReg
+            R{c}{n} = eye(4);
+        else    
+            Vm      = spm_vol(Nii_x{c}(n).dat.fname);
+            x       = spm_coreg(Vr,Vm);
+            R{c}{n} = spm_matrix(x(:)');
+        end        
+    end
+end
+%==========================================================================
+
+%==========================================================================
 % estimate_model_parameters()
-function [tau,lam,rho] = estimate_model_parameters(Nii,LamScl,NumWorkers,Verbose,LenaNoiseStd)
-if nargin < 5, LenaNoiseStd = 1e1; end   % For 'lena', std of additive Gaussian noise
+function [tau,lam,rho] = estimate_model_parameters(Nii,LamScl,RhoScl,NumWorkers,Verbose,LenaNoiseStd)
+if nargin < 6, LenaNoiseStd = 1e1; end   % For 'lena', std of additive Gaussian noise
 
 C   = numel(Nii);
 tau = cell(1,C); 
@@ -471,15 +530,63 @@ parfor (c=1:C,NumWorkers)
 end
 
 % This value of rho seems to lead to reasonably good convergence
-rho = 0.1*sqrt(mean(reshape(cell2mat(tau),[],1)))/mean(cell2mat(lam));
+rho = RhoScl*sqrt(mean(reshape(cell2mat(tau),[],1)))/mean(cell2mat(lam));
 if Verbose
     fprintf('step-size -> rho=%f\n', rho);
 end
 %==========================================================================
 
 %==========================================================================
+% get_dat()
+function [dat,dm,mat,vx] = get_dat(Nii_x,R)
+
+%---------------------------
+% Check if projection matrices need to be used
+%---------------------------
+
+C  = numel(Nii_x);
+vx = [];
+dm = [];
+for c=1:C
+    N = numel(Nii_x{c});
+    for n=1:N
+        vxc = sqrt(sum(Nii_x{c}(n).mat(1:3,1:3).^2)); % Voxel sizes   
+        dmc = size(Nii_x{c}(n).dat);                  % Image size
+        dmc = [dmc 1];
+
+        vx = [vx; round(vxc,2)];
+        dm = [dm; dmc];
+    end
+end
+
+vx = unique(vx,'rows');
+dm = unique(dm,'rows');
+
+%---------------------------
+% Build projection matrix struct (dat)
+%---------------------------
+
+if size(dm,1) == 1 && all(vx == 1)
+    % No need to use projection matrices    
+    dat = struct;
+    for c=1:C
+        N = numel(Nii_x{c});
+        for n=1:N
+            dat(c).A(n).do_pm = false;
+        end
+    end
+    mat = Nii_x{1}(1).mat; % Orientation matrix are the same for all images
+else
+    % Images are different size and/or different voxel size, use projection
+    % matrices 
+    [mat,dm,vx] = max_bb_orient(Nii_x,R);    
+    dat         = init_dat(Nii_x,mat,dm,R);
+end
+%==========================================================================
+
+%==========================================================================
 % get_ll()
-function [ll1,ll2,ll] = get_ll(Nii_x,Nii_y,Nii_Dy,tau,NumWorkers)
+function [ll1,ll2,ll] = get_ll(Nii_x,Nii_y,Nii_Dy,tau,dat,NumWorkers)
 % log posterior
 C   = numel(Nii_y);
 ll1 = 0;
@@ -489,8 +596,10 @@ parfor (c=1:C,NumWorkers)
     for n=1:numel(Nii_x{c})
         x   = get_nii(Nii_x{c}(n));
         msk = get_msk(x);
-        ll1 = ll1 + (tau{c}(n)/2)*sum(sum(sum((double(x(msk)) - double(y(msk))).^2)));
+        Ay  = pm('A',y,dat(c).A(n));
+        ll1 = ll1 + (tau{c}(n)/2)*sum(sum(sum((double(x(msk)) - double(Ay(msk))).^2)));
         x   = [];
+        Ay  = [];
     end
     y = [];    
     
@@ -583,7 +692,7 @@ elseif strcmp(ImName,'brainweb')
     
     Nii_x = cell(1,C);
     for n=1:BrainWebN
-        DirSim        = fullfile('./SimulatedData',['n' num2str(n)]);
+        DirSim        = fullfile('./SimulatedData/brainweb',['n' num2str(n)]);
         [Nii3d,Nii2d] = SimulateData('DirRef',DirRef, 'DirSim',DirSim, ...
                                      'Random',[true false false false false true]);
         for c=1:C
@@ -639,6 +748,45 @@ elseif strcmp(ImName,'qmri')
     Nii_y0 = [];
 else
     error('Unknown type!')
+end
+%==========================================================================
+
+%==========================================================================
+% max_bb_orient()
+function [mat,dm,vx] = max_bb_orient(Nii,R,vx)
+
+if nargin < 3, vx = [1 1 1]; end
+
+mn = [ Inf  Inf  Inf]';
+mx = [-Inf -Inf -Inf]';
+for c=1:numel(Nii)
+    N = numel(Nii{c});
+    for n=1:N
+        dmn = size(Nii{c}(n).dat);
+        
+        if numel(dmn) == 2
+            dmn(3) = 0; 
+        end
+
+        t = uint8(0:7);
+        s = diag(dmn+1)*double([bitshift(bitand(t,bitshift(uint8(1),1-1)),1-1)
+                              bitshift(bitand(t,bitshift(uint8(1),2-1)),1-2)
+                              bitshift(bitand(t,bitshift(uint8(1),3-1)),1-3)]);
+                          
+        mat = R{c}{n}\Nii{c}(n).mat;
+        
+        s  = bsxfun(@plus,mat(1:3,1:3)*s,mat(1:3,4));
+        mx = max(mx,max(s,[],2));
+        mn = min(mn,min(s,[],2));
+    end
+end
+
+mat = spm_matrix(mn-1)*diag([vx 1])*spm_matrix(-[1 1 1]);
+dm  = ceil((mat\[mx'+1 1]')');
+dm  = dm(1:3);
+
+if dmn(3) == 0
+    dm(3) = 1;
 end
 %==========================================================================
 
@@ -711,6 +859,50 @@ parfor (c=1:C,NumWorkers)
         Nii{c}(n) = nifti(nfname);
         delete(fname);
     end
+end
+%==========================================================================
+
+%==========================================================================
+% pm()
+function varargout = pm(nam,varargin)
+if strcmp(nam,'A')
+    %---------------------------
+    % Forward operator
+    %---------------------------
+
+    % Parse input
+    y = varargin{1};
+    A = varargin{2};
+    
+    if A.do_pm
+        x = apply_proj(y,A,nam);
+    else
+        % Identity
+        x = y;
+    end
+    
+    % Make output
+    varargout{1} = x;
+elseif strcmp(nam,'At')
+    %---------------------------
+    % Adjoint operator
+    %---------------------------
+    
+    % Parse input
+    x = varargin{1};
+    A = varargin{2};
+    
+    if A.do_pm
+        y = apply_proj(x,A,nam);
+    else
+        % Identity
+        y = x;
+    end
+    
+    % Make output
+    varargout{1} = y;
+else
+    error('Input argument error!')
 end
 %==========================================================================
 
@@ -795,10 +987,10 @@ if verbose
         if isrgb
             imshow(squeeze(im(:,:,z,:)));
         else
-            if dm(3) == 1
+            if size(im,3) == 1 && size(im,4) == 1
                 imagesc(im);
             else
-                montage(squeeze(im(:,:,z)),'DisplayRange',[0 max(im(:)) + eps]);
+                montage(squeeze(im(:,:,z,:)),'DisplayRange',[0 max(im(:)) + eps]);
             end
             colormap(gray);
         end
