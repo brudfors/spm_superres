@@ -35,8 +35,16 @@ parfor (c=1:C,NumWorkers)
     end
 end
 
+atau = [];
+for c=1:C
+    N = numel(tau{c});
+    for n=1:N
+        atau = [atau tau{c}(n)];
+    end
+end
+
 % This value of rho seems to lead to reasonably good convergence
-rho = RhoScl*sqrt(mean(reshape(cell2mat(tau),[],1)))/mean(cell2mat(lam));
+rho = RhoScl*sqrt(mean(atau(:))/mean(cell2mat(lam));
 if Verbose
     fprintf('step-size -> rho=%f\n', rho);
 end
