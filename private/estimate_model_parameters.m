@@ -44,7 +44,7 @@ for c=1:C
 end
 
 % This value of rho seems to lead to reasonably good convergence
-rho = RhoScl*sqrt(mean(atau(:))/mean(cell2mat(lam));
+rho = RhoScl*sqrt(mean(atau(:)))/mean(cell2mat(lam));
 if Verbose
     fprintf('step-size -> rho=%f\n', rho);
 end
