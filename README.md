@@ -18,8 +18,6 @@ This project has strong dependencies on SPM12 and its `Shoot` and `Longitudinal`
 ## Example
 
 ~~~~
-addpath('spm_superres')
-
 % Paths to some MR images of the same patient (in nifti format)
 P    = cell(1,3);
 P{1} = 'MRimage1.nii';
