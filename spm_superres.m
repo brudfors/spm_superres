@@ -131,6 +131,9 @@ N0 = 0;            % Total number of observations
 for c=1:C
     N0 = N0 + numel(Nii_x{c});
 end
+if C == 1
+    NumWorkers = 0;
+end
 
 % Show input
 show_stuff(Nii_y0,'y',1,Verbose,ShowZoomed);
