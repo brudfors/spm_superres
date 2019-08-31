@@ -3,7 +3,7 @@
 function [Nii_y,Nii_z,Nii_w,Nii_Dy,Nii_H] = alloc_vars(WriteTmpNii,Nii_x,dm,mat,DirOut,Verbose)
 if Verbose, fprintf('Allocating niftis...'); end
 
-if ~(exist(DirOut,'dir') == 7) 
+if ~(exist(DirOut,'dir') == 7) && ~isempty(DirOut)
     mkdir(DirOut);
 end
 

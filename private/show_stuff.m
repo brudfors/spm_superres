@@ -8,16 +8,16 @@ if nargin < 7, nr         = 2; end
 if nargin < 8, nc         = 2; end
 if nargin < 9, figname    = '(SPM) spm_superres'; end
 
-fig                  = findobj('Type', 'Figure', 'Name', figname);
-if isempty(fig), fig = figure('Name', figname, 'NumberTitle', 'off'); end
-set(0, 'CurrentFigure', fig);      
-    
-if isempty(in)
-    clf(fig);
-    return
-end
-
 if verbose >= 2
+    fig                  = findobj('Type', 'Figure', 'Name', figname);
+    if isempty(fig), fig = figure('Name', figname, 'NumberTitle', 'off'); end
+    set(0, 'CurrentFigure', fig);      
+
+    if isempty(in)
+        clf(fig);
+        return
+    end
+
     subplot(nr,nc,np);
     if strcmp(nam,'ll')        
         plot(in(min(3,numel(in)):end),'LineWidth',2);    

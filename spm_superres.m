@@ -1,10 +1,10 @@
-function Nii_y = spm_superres(pths,opt)
+function oNii = spm_superres(pths,opt)
 % Multi-channel total variation (MTV) super-resolution of MR data.
 %
 % Requires that the SPM software is on the MATLAB path.
 % SPM is available from: https://www.fil.ion.ucl.ac.uk/spm/software/spm12/
 %
-% FORMAT Nii_y = spm_superres(pths,opt)
+% FORMAT oNii = spm_superres(pths,opt)
 %
 % INPUT
 % pths  - [C x 1] cell array, where each element of the cell array holds a
@@ -18,7 +18,7 @@ function Nii_y = spm_superres(pths,opt)
 % opt   - Algorithm options, more info below.
 %
 % OUTPUT
-% Nii_y - nifti object of C denoised MRIs
+% oNii - nifti object of C processed MRIs
 %__________________________________________________________________________
 % The general principles are described in the following paper:
 %
@@ -369,6 +369,16 @@ if WriteTmpNii
         delete(Nii_Dy{c}.dat.fname);
         delete(Nii_H{c}.dat.fname);
     end
+end
+
+% Make output
+if isa(Nii_y{1},'nifti')
+    oNii = nifti;
+    for c=1:C
+        oNii(c) = Nii_y{c};
+    end
+else
+    oNii = Nii_y;
 end
 end
 %==========================================================================
