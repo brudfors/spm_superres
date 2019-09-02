@@ -1,7 +1,7 @@
 %==========================================================================
 function opt = get_opt(opt)
 % scaling of regularisation parameter (lambda)
-if ~isfield(opt,'LamScl'),      opt.LamScl      = 10;           end  
+if ~isfield(opt,'LamScl'),      opt.LamScl      = 5;           end  
 % scaling of step-size parameter (rho)
 if ~isfield(opt,'RhoScl'),      opt.RhoScl      = 1;            end  
 % Max number of iterations
@@ -32,7 +32,7 @@ if ~isfield(opt,'ShowZoomed'),  opt.ShowZoomed  = false;        end
 %   4. qmri
 if ~isfield(opt,'testcase'),    opt.testcase    = 1;            end  
 % Memory limit for when to allocate variables as niftis
-if ~isfield(opt,'maxmem'),      opt.maxmem      = 4096;         end 
+if ~isfield(opt,'maxmem'),      opt.maxmem      = 2048;         end 
 % Reconstruction voxel size, if 0, set to smallest available
 if ~isfield(opt,'VoxSize'),     opt.VoxSize     = 1;            end 
 % Downsample inplane resolution to 1 mm
