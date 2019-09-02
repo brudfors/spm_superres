@@ -1,7 +1,7 @@
 %==========================================================================
 function opt = get_opt(opt)
 % scaling of regularisation parameter (lambda)
-if ~isfield(opt,'LamScl'),      opt.LamScl      = 5;           end  
+if ~isfield(opt,'LamScl'),      opt.LamScl      = 10;           end  
 % scaling of step-size parameter (rho)
 if ~isfield(opt,'RhoScl'),      opt.RhoScl      = 1;            end  
 % Max number of iterations
