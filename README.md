@@ -7,9 +7,7 @@ The code is based on the method described in the paper:
      Brudfors M, Balbastre Y, Nachev P, Ashburner J.
      MRI Super-Resolution Using Multi-channel Total Variation.
      In Annual Conference on Medical Image Understanding and Analysis
-     2018 Jul 9 (pp. 217-228). Springer, Cham.
-     
-The most up-to-date PDF version of the paper is available from https://arxiv.org/abs/1810.03422.
+     2018 Jul 9 (pp. 217-228). Springer, Cham.   
 
 ## Dependencies
 
