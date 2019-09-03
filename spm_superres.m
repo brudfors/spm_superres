@@ -15,6 +15,9 @@ function oNii = spm_superres(pths,opt)
 %                         pths{1} = char('T1w1.nii','T1w2.nii')
 %                         pths{2} = char('T2w1.nii','T2w2.nii','T2w3.nii')
 %                         pths{3} = char('PDw1.nii')
+%        or
+%                 The path to a folder, where each subfolder of that folder 
+%                 contains a set of images of one contrast.
 % opt   - Algorithm options, more info below.
 %
 % OUTPUT
