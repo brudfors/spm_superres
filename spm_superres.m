@@ -173,7 +173,11 @@ WriteTmpNii = check_do_write(C,dm,MaxMem,NumWorkers);
 %---------------------------
 
 if Verbose
-    fprintf('\nRunning %d iterations:\n', MaxNiter);
+    if Tolerance == 0
+        fprintf('\nRunning %d iterations:\n', MaxNiter);
+    else
+        fprintf('\nRunning max %d iterations:\n', MaxNiter);
+    end
 end
 
 tic
