@@ -378,10 +378,20 @@ if WriteTmpNii
 end
 
 % Make output
-if isa(Nii_y{1},'nifti')
+if isa(Nii_y{1},'nifti')            
     oNii = nifti;
     for c=1:C
         oNii(c) = Nii_y{c};
+    end
+    
+    % Change data-type
+    for c=1:C
+        y = oNii(c).dat();
+        f = oNii(c).dat.fname;
+        delete(f);
+        create_nii(f,y,mat,Nii_x{1}(1).dat.dtype,'y', ...
+                   Nii_x{1}(1).dat.offset,Nii_x{1}(1).dat.scl_slope, ...
+                   Nii_x{1}(1).dat.scl_inter);
     end
 else
     oNii = Nii_y;
