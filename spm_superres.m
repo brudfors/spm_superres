@@ -16,8 +16,11 @@ function oNii = spm_superres(pths,opt)
 %                         pths{2} = char('T2w1.nii','T2w2.nii','T2w3.nii')
 %                         pths{3} = char('PDw1.nii')
 %        or
-%                 The path to a folder, where each subfolder of that folder 
-%                 contains a set of images of one contrast.
+%                 The path to a folder that can have two structures:
+%                 1. The folder contains C niftis of different channels.
+%                 1. Each subfolder of the folder contains a set of niftis 
+%                    of the same channel. So there are as many subfolders
+%                    as channels.
 % opt   - Algorithm options, more info below.
 %
 % OUTPUT
