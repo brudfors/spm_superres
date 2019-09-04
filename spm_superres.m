@@ -26,13 +26,16 @@ function oNii = spm_superres(pths,opt)
 % OUTPUT
 % oNii - nifti object of C processed MRIs
 %__________________________________________________________________________
-% The general principles are described in the following paper:
+% The general principles are described in the following papers:
+%
+%     Brudfors M, Balbastre Y, Nachev P, Ashburner J.
+%     A Tool for Super-Resolving Multimodal Clinical MRI.
+%     2019 arXiv preprint arXiv:1909.01140.   
 %
 %     Brudfors M, Balbastre Y, Nachev P, Ashburner J.
 %     MRI Super-Resolution Using Multi-channel Total Variation.
 %     In Annual Conference on Medical Image Understanding and Analysis
 %     2018 Jul 9 (pp. 217-228). Springer, Cham.
-%
 %__________________________________________________________________________
 % Copyright (C) 2018 Wellcome Centre for Human Neuroimaging
 
@@ -40,7 +43,7 @@ if nargin < 1, pths = [];     end
 if nargin < 2, opt  = struct; end
 
 % Add required SPM toolboxes to path
-pth=fileparts(which('spm'));
+pth = fileparts(which('spm'));
 if ~isdeployed, addpath(pth); end
 if ~isdeployed, addpath(fullfile(pth,'toolbox','Longitudinal')); end
 if ~isdeployed, addpath(fullfile(pth,'toolbox','Shoot')); end
