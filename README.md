@@ -11,11 +11,37 @@ The code is based on the algorithm described in the paper:
 
 ## Using Docker
 
-Coming soon.
+With Docker ([https://docs.docker.com/get-started/](https://docs.docker.com/get-started/)) installed on your system, use the following steps to super-resolve a set of subject MRI scans to 1 mm isotropic voxel size:
+
+1. Get the spm_superres Docker image: 
+
+     `docker pull mbrud/spm_superres`
+
+2. Open an spm_superres container: 
+
+     `docker run -dit -v [PTH-IN]:/input mbrud/spm_superres` 
+     
+   where `[PTH-IN]` is the full path to a directory containing a set of subject MR images.
+
+3. Execute the super-resolution command in the container: 
+
+     `docker exec [ID] /opt/spm12/spm12 function spm_superres input`
+
+   where `[ID]` is the container id (get it using the `docker ps` command).
+
+4. Copy the output from the container to your local machine: 
+
+     `docker cp [ID]:/input [PTH-OUT]`
+
+   where `[PTH-OUT]` is the full path to the directory where you want the super-resolved images.
+
+5. Finally, shut down the running container: 
+
+     `docker rm -v [ID]`
 
 ## Using MATLAB
 
-Just pull/download the code from this repository onto your computer. Make sure that the SPM12 software is on Matlab's path. The most recent version of SPM12 can be downloaded from [www.fil.ion.ucl.ac.uk/spm](http://www.fil.ion.ucl.ac.uk/spm/). If you get error messages when running the code, it is probably because your SPM version is too old. 
+If you want to change model parameters (e.g., the super-resolved images' voxel size, or increase the regularisation) or modify the code itself you will need to run it using MATLAB. If so, then just pull/download the code from this repository onto your computer. Make sure that the SPM12 software is on Matlab's path. The most recent version of SPM12 can be downloaded from [www.fil.ion.ucl.ac.uk/spm](http://www.fil.ion.ucl.ac.uk/spm/). If you get error messages when running the code, it is probably because your SPM version is too old. 
 
 The following is an example of super-resolving three MR scans of a subject to 1 mm isotropic voxel size:
 ~~~~
