@@ -29,11 +29,11 @@ With Docker ([https://docs.docker.com/get-started/](https://docs.docker.com/get-
 
    where `[ID]` is the container id (get it using the `docker ps` command).
 
-4. Copy the output from the container to your local machine: 
+4. Copy container's `/input` folder to your local machine: 
 
      `docker cp [ID]:/input [PTH-OUT]`
 
-   where `[PTH-OUT]` is the full path to the directory where you want the super-resolved images.
+   where `[PTH-OUT]` is the full path to the directory where you want the super-resolved images. The super-resolved images are prefixed `'y'`.
 
 5. Finally, shut down the running container: 
 
