@@ -187,10 +187,11 @@ for it=1:MaxNiter
     %---------------------------
     % Update y
     %---------------------------
-    
+        
     parfor (c=1:C,NumWorkers)
 %     for c=1:C, fprintf('OBS: for!\n')
         N = numel(Nii_x{c});
+        y = [];
         for it1=1:NiterNewton
                     
             y = get_nii(Nii_y{c});
@@ -218,7 +219,7 @@ for it=1:MaxNiter
                 end                                
                 
                 % Gradient part
-                msk      = get_msk(x);                
+                msk       = get_msk(x);                
                 gr1       = tau{c}(n)*pm('At',(pm('A',y,datcn) - x),datcn);
                 gr1(~msk) = 0;
                 gr        = gr + gr1;

@@ -7,7 +7,9 @@ C   = numel(Nii);
 tau = cell(1,C); 
 lam = cell(1,C);
 parfor (c=1:C,NumWorkers)
-    N = numel(Nii{c});
+    N        = numel(Nii{c});
+    NoiseStd = [];
+    mu       = [];
     if ~isa(Nii{c}(1),'nifti')
         % Lena image
         n        = 1;

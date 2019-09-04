@@ -22,7 +22,7 @@ smo(smo <= 1)  = 0;
 gap            = 1/3;
 % smo(ix)        = smo(ix) - gap*smo(ix);
 sd             = smo./(2*sqrt(2*log(2)));
-sdscl          = 0;%4;
+sdscl          = 4;
 
 off         = -(sdscl*sd)';
 Moff        = eye(4);
