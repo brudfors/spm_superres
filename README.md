@@ -37,6 +37,8 @@ With Docker ([https://docs.docker.com/get-started/](https://docs.docker.com/get-
 
 5. Finally, shut down the running container: 
 
+     `docker stop [ID]`
+     
      `docker rm -v [ID]`
 
 ## Using MATLAB
