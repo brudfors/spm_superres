@@ -41,9 +41,9 @@ if nargin < 2, opt  = struct; end
 
 % Add required SPM toolboxes to path
 pth=fileparts(which('spm'));
-addpath(pth);
-addpath(fullfile(pth,'toolbox','Longitudinal'));
-addpath(fullfile(pth,'toolbox','Shoot'));
+if ~isdeployed, addpath(pth); end
+if ~isdeployed, addpath(fullfile(pth,'toolbox','Longitudinal')); end
+if ~isdeployed, addpath(fullfile(pth,'toolbox','Shoot')); end
 
 % Set up boundary conditions
 spm_diffeo('bound',1); % OK?
