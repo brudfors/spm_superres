@@ -5,7 +5,7 @@ if iscell(pths)
     C   = numel(pths);
     Nii = cell(1,C);
     for c=1:C
-        Nii{c} = nifti(pths{c});
+        Nii{c} = spm_vol(pths{c});
     end
 elseif ischar(pths) && (exist(pths,'dir') == 7)
     dirs = spm_select('List',pths,'dir');    
@@ -15,7 +15,8 @@ elseif ischar(pths) && (exist(pths,'dir') == 7)
         for c=1:C
             d      = deblank(dirs(c,:));
             d      = fullfile(pths,d);
-            Nii{c} = nifti(spm_select('FPList',d,'^.*\.nii$'));
+            files  = spm_select('FPList',d,'^.*\.nii$');
+            Nii{c} = spm_vol(files);
         end
     else
         files = spm_select('FPList',pths,'^.*\.nii$');
@@ -23,7 +24,7 @@ elseif ischar(pths) && (exist(pths,'dir') == 7)
         Nii   = cell(1,C);
         for c=1:C
             f      = deblank(files(c,:));
-            Nii{c} = nifti(f);
+            Nii{c} = spm_vol(f);
         end
     end
 else

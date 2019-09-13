@@ -26,6 +26,32 @@ function oNii = spm_superres(pths,opt)
 % OUTPUT
 % oNii - nifti object of C processed MRIs
 %__________________________________________________________________________
+% OPTIONS
+% LamScl      - Scaling of regularisation parameter (lambda)           [10]
+% RhoScl      - Scaling of step-size parameter (rho)                    [1]
+% MaxNiter    - Max number of iterations                               [50]
+% NiterNewton - Newton iterations                                       [1]
+% Tolerance   - Convergence threshold                                [1e-4]
+% DoMTV       - Run either MTV or indepentend TV denoising           [true]
+% DirOut      - Directory where to write output (and temporary files, 
+%               which are deleted at end of algorithm)                 ['']
+% Nii_y0      - Clean reference image                                    []
+% NumWorkers  - Number of parfor workers                                [8]
+% Verbose     - Show stuff                                              [1]
+% DoCoReg     - Do preprocessing (register)                          [true]
+% ShowZoomed  - Show one image, zoomed in                           [false]
+% MaxMem      - Memory limit to allocate variables as niftis         [2048]
+% VoxSize     - Reconstruction voxel size                               [1]
+%               If 0, set to smallest available
+% TestCase    - Different test-cases:                                   [0]
+%                   0. No testing
+%                   1. brainweb (superres)
+%                   2. brainweb (den)
+%                   3. lena
+%                   4. qmri
+% Inplane1mm  - Downsample inplane resolution to 1 mm                [true]
+% Denoise     - Do just denoising, without super-resolving          [false]
+%__________________________________________________________________________
 % The general principles are described in the following paper:
 %
 %     Brudfors M, Balbastre Y, Nachev P, Ashburner J.
@@ -67,9 +93,9 @@ NumWorkers  = opt.NumWorkers;
 Verbose     = opt.Verbose;
 DoCoReg     = opt.DoCoReg;
 ShowZoomed  = opt.ShowZoomed;
-MaxMem      = opt.maxmem;
+MaxMem      = opt.MaxMem;
 VoxSize     = opt.VoxSize;
-TestCase    = opt.testcase;
+TestCase    = opt.TestCase;
 Inplane1mm  = opt.Inplane1mm;
 Denoise     = opt.Denoise;
 
@@ -394,9 +420,9 @@ if isa(Nii_y{1},'nifti')
         y = oNii(c).dat();
         f = oNii(c).dat.fname;
         delete(f);
-        create_nii(f,y,mat,Nii_x{1}(1).dat.dtype,'y', ...
-                   Nii_x{1}(1).dat.offset,Nii_x{1}(1).dat.scl_slope, ...
-                   Nii_x{1}(1).dat.scl_inter);
+        create_nii(f,y,mat,Nii_x{1}(1).private.dat.dtype,'y', ...
+                   Nii_x{1}(1).private.dat.offset,Nii_x{1}(1).private.dat.scl_slope, ...
+                   Nii_x{1}(1).private.dat.scl_inter);
     end
 else
     oNii = Nii_y;

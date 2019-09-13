@@ -2,6 +2,9 @@
 % apply_proj()
 function out = apply_proj(in,A,method)
 
+spm_diffeo('bound',1); % OK?
+spm_field('bound',1);  % match the gradient operator
+
 % Projection parameters
 R    = A.R;
 Mmu  = A.mat0;
@@ -50,7 +53,7 @@ if strcmp(method,'A')
     Ty  = Mmu\(R\(Mf/D));    
     Ty  = Ty*Moff;    
     dmy = dmoff;
-    out = spm_diffeo('pullc',in,apply_affine(Ty,dmy)); 
+    out = spm_diffeo('pull',in,apply_affine(Ty,dmy)); 
 
     if verbose
         % Verbose
@@ -71,7 +74,7 @@ if strcmp(method,'A')
     Ty  = D;
     Ty  = Moff\Ty; 
     dmy = dmf;
-    out = spm_diffeo('pullc',out,apply_affine(Ty,dmy)); 
+    out = spm_diffeo('pull',out,apply_affine(Ty,dmy)); 
 %     out = out(1:D(1,1):end,1:D(2,2):end,1:D(3,3):end);
         
     if verbose
@@ -92,7 +95,7 @@ elseif strcmp(method,'At')
     Ty  = D;
     Ty  = Moff\Ty; 
     dmy = dmoff;
-    out = spm_diffeo('pushc',in,apply_affine(Ty,dmf),dmy); 
+    out = spm_diffeo('push',in,apply_affine(Ty,dmf),dmy); 
 %     out                                     = zeros(dmy,'single');
 %     out(1:D(1,1):end,1:D(2,2):end,1:D(3,3)) = in;
     
@@ -115,7 +118,7 @@ elseif strcmp(method,'At')
     Ty  = Mmu\(R\(Mf/D));
     Ty  = Ty*Moff;
     dmy = dmoff;
-    out = spm_diffeo('pushc',out,apply_affine(Ty,dmy),dmmu); 
+    out = spm_diffeo('push',out,apply_affine(Ty,dmy),dmmu); 
     
     if verbose
         % Verbose

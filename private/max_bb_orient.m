@@ -11,7 +11,7 @@ mx = [-Inf -Inf -Inf]';
 for c=1:numel(Nii)
     N = numel(Nii{c});
     for n=1:N
-        dmn = size(Nii{c}(n).dat);
+        dmn = Nii{c}(n).dim;
         
         if numel(dmn) == 2
             dmn(3) = 0; 

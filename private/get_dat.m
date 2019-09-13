@@ -45,7 +45,7 @@ for c=1:C
     N = numel(Nii_x{c});
     for n=1:N
         vxc = sqrt(sum(Nii_x{c}(n).mat(1:3,1:3).^2)); % Voxel sizes   
-        dmc = size(Nii_x{c}(n).dat);                  % Image size
+        dmc = Nii_x{c}(n).dim;                        % Image size
         dmc = [dmc 1];
 
         vx = [vx; round(vxc,2)];
