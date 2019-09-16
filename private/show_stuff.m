@@ -6,7 +6,7 @@ if nargin < 5, ShowZoomed = false; end
 if nargin < 6, isrgb      = false; end
 if nargin < 7, nr         = 2; end
 if nargin < 8, nc         = 2; end
-if nargin < 9, figname    = '(SPM) spm_superres1'; end
+if nargin < 9, figname    = '(SPM) spm_superres'; end
 
 if verbose >= 2
     fig                  = findobj('Type', 'Figure', 'Name', figname);

@@ -421,14 +421,14 @@ if isa(Nii_y{1},'nifti')
     % Change data-type
     for c=1:C
         y = oNii(c).dat();
-        f = oNii(c).dat.fname;
+        f = Nii_y{c}.dat.fname;
         delete(f);
-        create_nii(f,y,mat,Nii_x{1}(1).private.dat.dtype,'y', ...
-                   Nii_x{1}(1).private.dat.offset,Nii_x{1}(1).private.dat.scl_slope, ...
-                   Nii_x{1}(1).private.dat.scl_inter);
+        
+        create_nii(f,y,mat,Nii_x{c}(1).private.dat.dtype,'y', ...
+                   Nii_x{c}(1).private.dat.offset,Nii_x{c}(1).private.dat.scl_slope, ...
+                   Nii_x{c}(1).private.dat.scl_inter);
     end
 else
     oNii = Nii_y;
-end
 end
 %==========================================================================

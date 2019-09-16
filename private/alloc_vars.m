@@ -22,10 +22,10 @@ else
     Nii_H  = {struct}; 
 end
 for c=1:C
-    if isa(Nii_x{c}(1),'nifti')        
-        f = Nii_x{c}(1).dat.fname;        
+    if isstruct(Nii_x{c}(1))        
+        f = Nii_x{c}(1).fname;        
     else
-        f = ['x' num2str(c) '.nii'];
+        f = ['img' num2str(c) '.nii'];
     end
     [pth,nam] = fileparts(f);
             
