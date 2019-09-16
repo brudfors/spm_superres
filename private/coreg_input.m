@@ -11,16 +11,16 @@ for c=1:C
     R{c}(:) = {eye(4)};
 end
 
-if numel(size(Nii_x{1}(1).dat)) > 2
+if Nii_x{1}(1).dim(3) > 1
     
-    Vr = spm_vol(Nii_x{ref(1)}(ref(2)).dat.fname);    
+    Vr = Nii_x{ref(1)}(ref(2));
     for c=1:C
         N = numel(Nii_x{c});         
         for n=1:N
             if (c == ref(1) && n == ref(2)) || ~DoCoReg
                 continue
             else    
-                Vm      = spm_vol(Nii_x{c}(n).dat.fname);
+                Vm      = Nii_x{c}(n);
                 x       = spm_coreg(Vr,Vm);
                 R{c}{n} = spm_matrix(x(:)');
             end        

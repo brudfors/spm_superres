@@ -30,9 +30,9 @@ if ~isfield(opt,'ShowZoomed'),  opt.ShowZoomed  = false;        end
 %   2. brainweb (den)
 %   3. lena
 %   4. qmri
-if ~isfield(opt,'testcase'),    opt.testcase    = 1;            end  
+if ~isfield(opt,'TestCase'),    opt.TestCase    = 1;            end  
 % Memory limit for when to allocate variables as niftis
-if ~isfield(opt,'maxmem'),      opt.maxmem      = 2048;         end 
+if ~isfield(opt,'MaxMem'),      opt.MaxMem      = 2048;         end 
 % Reconstruction voxel size, if 0, set to smallest available
 if ~isfield(opt,'VoxSize'),     opt.VoxSize     = 1;            end 
 % Downsample inplane resolution to 1 mm

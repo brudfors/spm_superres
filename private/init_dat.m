@@ -39,7 +39,7 @@ N          = numel(Nii); % Number of LR images
 vs         = sqrt(sum(Mmu(1:3,1:3).^2));
 for n=1:N % Loop over LR images
     Mf  = Nii(n).mat;    
-    dmf = Nii(n).dat.dim;
+    dmf = Nii(n).dim;
     dmf = [dmf 1];
 
     dat.A(n).mat0 = Mmu;

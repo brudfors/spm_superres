@@ -10,7 +10,7 @@ parfor (c=1:C,NumWorkers)
     N        = numel(Nii{c});
     NoiseStd = [];
     mu       = [];
-    if ~isa(Nii{c}(1),'nifti')
+    if isnumeric(Nii{c}(1))
         % Lena image
         n        = 1;
         x        = get_nii(Nii{c}(n));
@@ -20,7 +20,7 @@ parfor (c=1:C,NumWorkers)
     else
         % MRI stored in nifti
         for n=1:N
-            [NoiseStd,mu] = spm_noise_estimate(Nii{c});
+            [NoiseStd,mu] = noise_estimate(Nii{c});
             tau{c}        = 1./(NoiseStd.^2);          
         end
     end
@@ -28,7 +28,7 @@ parfor (c=1:C,NumWorkers)
     
     % Scale with number of observations to give a little more weight to the
     % prior when there are multiple observations of the same channel
-    lam{c} = sqrt(N)*lam{c}; 
+    lam{c} = lam{c}; 
     
     if Verbose
         for n=1:N

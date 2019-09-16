@@ -1,6 +1,6 @@
 # A Tool for Super-Resolving Multimodal Clinical MRI
 
-Multi-channel total variation (MTV) super-resolution of magnetic resoinace imaging (MRI) data. The tool can be run either as a Docker image or MATLAB (using SPM12).
+Multi-channel total variation (MTV) super-resolution of magnetic resonance imaging (MRI) data. The tool can be run either as a Docker image or MATLAB (using SPM12).
 
 The code is based on the algorithm described in the papers:
 
