@@ -75,7 +75,7 @@ spm_field('bound',1);  % match the gradient operator
 % Options
 %---------------------------
 
-opt = get_opt(opt);
+opt = spm_superres_lib('get_opt',opt);
 
 LamScl      = opt.LamScl;
 RhoScl      = opt.RhoScl;
@@ -102,19 +102,19 @@ Denoise     = opt.Denoise;
 % Parse input data
 %---------------------------
         
-Nii_x = parse_input(pths);
+Nii_x = spm_superres_lib('parse_input',pths);
 
 %---------------------------
 % Estimate rigid alignment matrices
 %---------------------------
 
-R = coreg_input(Nii_x,DoCoReg);
+R = spm_superres_lib('coreg_input',Nii_x,DoCoReg);
     
 %---------------------------
 % Get projection matrix struct and image properties
 %---------------------------
 
-[dat,dm,mat,vx] = get_dat(Nii_x,R,VoxSize,Inplane1mm,Denoise);
+[dat,dm,mat,vx] = spm_superres_lib('get_dat',Nii_x,R,VoxSize,Inplane1mm,Denoise);
     
 C  = numel(Nii_x); % Number of channels
 N0 = 0;            % Total number of observations
@@ -126,31 +126,31 @@ if C == 1
 end
 
 % Show input
-show_stuff(Nii_y0,'y',1,Verbose,ShowZoomed);
+spm_superres_lib('show_stuff',Nii_y0,'y',1,Verbose,ShowZoomed);
 if dat(1).A(1).do_pm
-    show_stuff(Nii_x, ['x (C=' num2str(C) ' N=' num2str(N0) ')'],2,Verbose,true);
+    spm_superres_lib('show_stuff',Nii_x, ['x (C=' num2str(C) ' N=' num2str(N0) ')'],2,Verbose,true);
 else
-    show_stuff(Nii_x, ['x (C=' num2str(C) ' N=' num2str(N0) ')'],2,Verbose,ShowZoomed);
+    spm_superres_lib('show_stuff',Nii_x, ['x (C=' num2str(C) ' N=' num2str(N0) ')'],2,Verbose,ShowZoomed);
 end
 
 %---------------------------
 % Decide if to allocate temp vars in niftis or not
 %---------------------------
 
-WriteTmpNii = check_do_write(C,dm,MaxMem,NumWorkers);
+WriteTmpNii = spm_superres_lib('check_do_write',C,dm,MaxMem,NumWorkers);
 
 %---------------------------
 % Estimate model parameters
 %---------------------------
 
-[tau,lam,rho] = estimate_model_parameters(Nii_x,LamScl,RhoScl,NumWorkers,Verbose);
+[tau,lam,rho] = spm_superres_lib('estimate_model_parameters',Nii_x,LamScl,RhoScl,NumWorkers,Verbose);
 
 %---------------------------
 % Init variables (creates a load of niftis that will be deleted at end of
 % algorithm)
 %---------------------------
     
-[Nii_y,Nii_z,Nii_w,Nii_Dy,Nii_H] = alloc_vars(WriteTmpNii,Nii_x,dm,mat,DirOut,Verbose);
+[Nii_y,Nii_z,Nii_w,Nii_Dy,Nii_H] = spm_superres_lib('alloc_vars',WriteTmpNii,Nii_x,dm,mat,DirOut,Verbose);
 
 %---------------------------
 % Run algorithm 
@@ -178,9 +178,9 @@ for it=1:MaxNiter
         y = [];
         for it1=1:NiterNewton
                     
-            y = get_nii(Nii_y{c});
-            z = get_nii(Nii_z{c});
-            w = get_nii(Nii_w{c});
+            y = spm_superres_lib('get_nii',Nii_y{c});
+            z = spm_superres_lib('get_nii',Nii_z{c});
+            w = spm_superres_lib('get_nii',Nii_w{c});
            
             % Compute gradient and Hessian
             gr = single(0);
@@ -192,19 +192,19 @@ for it=1:MaxNiter
                 datcn = dat(c).A(n);
                 
                 % Mask missing data
-                x = get_nii(Nii_x{c}(n));
+                x = spm_superres_lib('get_nii',Nii_x{c}(n));
                 if Inplane1mm && datcn.do_pm
                     % Downsample observed data to have 1 mm inplane
                     % resolution
-                    y0 = double(apply_affine(datcn.D,datcn.dm(1:3)));
+                    y0 = double(spm_superres_lib('apply_affine',datcn.D,datcn.dm(1:3)));
                     x  = spm_bsplins(double(x),y0(:,:,:,1),y0(:,:,:,2),y0(:,:,:,3),[0 0 0 0 0 0]);   
                     x  = single(x);
                     y0 = [];
                 end                                
                 
                 % Gradient part
-                msk       = get_msk(x);                
-                gr1       = tau{c}(n)*pm('At',(pm('A',y,datcn) - x),datcn);
+                msk       = spm_superres_lib('get_msk',x);                
+                gr1       = tau{c}(n)*spm_superres_lib('pm','At',(spm_superres_lib('pm','A',y,datcn) - x),datcn);
                 gr1(~msk) = 0;
                 gr        = gr + gr1;
                 x         = [];
@@ -212,7 +212,7 @@ for it=1:MaxNiter
                 % Hessian part
                 if it == 1 && NiterNewton == 1
                     % Compute only once (does not change)
-                    H1       = tau{c}(n)*pm('At',pm('A',ones(dm,'single'),datcn),datcn);
+                    H1       = tau{c}(n)*spm_superres_lib('pm','At',spm_superres_lib('pm','A',ones(dm,'single'),datcn),datcn);
                     H1(~msk) = 0;               
                     H        = H + H1;
                 end
@@ -225,13 +225,13 @@ for it=1:MaxNiter
             
             if it == 1 && NiterNewton == 1
                 % Save Hessian
-                Nii_H{c} = put_nii(Nii_H{c},H);
+                Nii_H{c} = spm_superres_lib('put_nii',Nii_H{c},H);
             else
                 % Load Hessian
-                H = get_nii(Nii_H{c});
+                H = spm_superres_lib('get_nii',Nii_H{c});
             end
             
-            gr = gr + diffoperator(w - rho*z,dm,vx,lam{c},'Dt');
+            gr = gr + spm_superres_lib('diffoperator',w - rho*z,dm,vx,lam{c},'Dt');
             z  = [];
             w  = [];
             
@@ -246,17 +246,17 @@ for it=1:MaxNiter
             y(y < 0) = 0;
             
             % Update nii
-            Nii_y{c} = put_nii(Nii_y{c},y);
+            Nii_y{c} = spm_superres_lib('put_nii',Nii_y{c},y);
         end
 
         % Compute Dy
-        Dy        = diffoperator(y,dm,vx,lam{c},'D');
-        Nii_Dy{c} = put_nii(Nii_Dy{c},Dy);
+        Dy        = spm_superres_lib('diffoperator',y,dm,vx,lam{c},'D');
+        Nii_Dy{c} = spm_superres_lib('put_nii',Nii_Dy{c},Dy);
         y         = [];
         Dy        = [];
     end    
     
-    show_stuff(Nii_y,'yhat',4,Verbose,ShowZoomed);
+    spm_superres_lib('show_stuff',Nii_y,'yhat',4,Verbose,ShowZoomed);
     
     %---------------------------
     % Update z
@@ -266,8 +266,8 @@ for it=1:MaxNiter
         % MTV
         znorm = single(0);
         parfor (c=1:C,NumWorkers)     
-            w     = get_nii(Nii_w{c});
-            Dy    = get_nii(Nii_Dy{c});
+            w     = spm_superres_lib('get_nii',Nii_w{c});
+            Dy    = spm_superres_lib('get_nii',Nii_Dy{c});
             znorm = znorm + sum((Dy + w/rho).^2,4);        
         end
         Dy = [];
@@ -278,28 +278,28 @@ for it=1:MaxNiter
         znorm = [];
 
         parfor (c=1:C,NumWorkers)    
-            w  = get_nii(Nii_w{c});
-            Dy = get_nii(Nii_Dy{c});
+            w  = spm_superres_lib('get_nii',Nii_w{c});
+            Dy = spm_superres_lib('get_nii',Nii_Dy{c});
             z  = mtv.*(Dy + w/rho);
             
             % Update nii
-            Nii_z{c} = put_nii(Nii_z{c},z);
+            Nii_z{c} = spm_superres_lib('put_nii',Nii_z{c},z);
         end    
         Dy = [];
         w  = [];
         z  = [];
         
-        show_stuff(mtv,'mtv',3,Verbose,ShowZoomed);
+        spm_superres_lib('show_stuff',mtv,'mtv',3,Verbose,ShowZoomed);
     else
         % Regular TV
         parfor (c=1:C,NumWorkers)
-            w        = get_nii(Nii_w{c});
-            Dy       = get_nii(Nii_Dy{c});
+            w        = spm_superres_lib('get_nii',Nii_w{c});
+            Dy       = spm_superres_lib('get_nii',Nii_Dy{c});
             tmp      = sqrt(sum((Dy + w/rho).^2,4));
             z        = (max(tmp - 1/rho,0)./(tmp + eps)).*(Dy + w/rho);
             
             % Update nii
-            Nii_z{c} = put_nii(Nii_z{c},z);
+            Nii_z{c} = spm_superres_lib('put_nii',Nii_z{c},z);
         end
         Dy  = [];
         tmp = [];
@@ -312,13 +312,13 @@ for it=1:MaxNiter
     %---------------------------
     
     parfor (c=1:C,NumWorkers)  
-        Dy = get_nii(Nii_Dy{c});
-        z  = get_nii(Nii_z{c});
-        w  = get_nii(Nii_w{c});
+        Dy = spm_superres_lib('get_nii',Nii_Dy{c});
+        z  = spm_superres_lib('get_nii',Nii_z{c});
+        w  = spm_superres_lib('get_nii',Nii_w{c});
         w  = w + rho*(Dy - z);
         
         % Update nii
-        Nii_w{c} = put_nii(Nii_w{c},w);
+        Nii_w{c} = spm_superres_lib('put_nii',Nii_w{c},w);
     end
     mtv = [];
     w   = [];
@@ -329,14 +329,14 @@ for it=1:MaxNiter
     % Objective function
     %---------------------------
         
-    [~,~,dll] = get_ll(Nii_x,Nii_y,Nii_Dy,tau,dat,NumWorkers,Inplane1mm);
+    [~,~,dll] = spm_superres_lib('get_ll',Nii_x,Nii_y,Nii_Dy,tau,dat,NumWorkers,Inplane1mm);
     ll        = [ll, dll]; 
 %     diff1     = abs((ll(end) - ll(end - 1)));
     diff1     = 2*(ll(end - 1) - ll(end))/(ll(end - 1) + ll(end));
     if Verbose
         fprintf('%3i %10.2f %10.6f %10.6f\n', it, ll(end), diff1, Tolerance);           
     end
-    show_stuff(ll,'ll',1,Verbose,ShowZoomed);
+    spm_superres_lib('show_stuff',ll,'ll',1,Verbose,ShowZoomed);
     
     %---------------------------
     % Check if converged
@@ -375,9 +375,9 @@ if isa(Nii_y{1},'nifti')
         f = Nii_y{c}.dat.fname;
         delete(f);
         
-        create_nii(f,y,mat,Nii_x{c}(1).private.dat.dtype,'y', ...
-                   Nii_x{c}(1).private.dat.offset,Nii_x{c}(1).private.dat.scl_slope, ...
-                   Nii_x{c}(1).private.dat.scl_inter);
+        spm_superres_lib('create_nii',f,y,mat,Nii_x{c}(1).private.dat.dtype,'y', ...
+                         Nii_x{c}(1).private.dat.offset,Nii_x{c}(1).private.dat.scl_slope, ...
+                         Nii_x{c}(1).private.dat.scl_inter);
     end
 else
     oNii = Nii_y;
