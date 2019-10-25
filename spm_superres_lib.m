@@ -349,7 +349,7 @@ for c=1:C
         dmc = Nii_x{c}(n).dim;                        % Image size
         dmc = [dmc 1];
 
-        vx = [vx; round(vxc,2)];
+        vx = [vx; round(vxc*10^2)/10^2];
         dm = [dm; dmc];
     end
 end
@@ -439,17 +439,26 @@ end
 %==========================================================================
 % get_nii()
 function img = get_nii(nii)
-if isa(nii, 'nifti')
-    img = single(nii.dat());
-elseif isstruct(nii)
-    if isfield(nii, 'private')
-        img = single(spm_read_vols(nii));
-    else
-        img = single(nii.dat());
-    end
-else
-    img = single(nii());
+if isa(nii, 'nifti') || (isstruct(nii) && ~isfield(nii, 'private'))
+      nii = nii.dat;
 end
+if isstruct(nii)
+      img = single(spm_read_vols(nii));
+else
+      [idx{1:ndims(nii)}] = deal(':');
+      img = single(subsref(nii,struct('type','()','subs',{idx})));
+end
+% if isa(nii, 'nifti')
+%     img = single(nii.dat());
+% elseif isstruct(nii)
+%     if isfield(nii, 'private')
+%         img = single(spm_read_vols(nii));
+%     else
+%         img = single(nii.dat());
+%     end
+% else
+%     img = single(nii());
+% end
 end
 %==========================================================================
 
