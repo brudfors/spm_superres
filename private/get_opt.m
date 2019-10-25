@@ -5,7 +5,7 @@ if ~isfield(opt,'LamScl'),      opt.LamScl      = 10;           end
 % scaling of step-size parameter (rho)
 if ~isfield(opt,'RhoScl'),      opt.RhoScl      = 1;            end  
 % Max number of iterations
-if ~isfield(opt,'MaxNiter'),    opt.MaxNiter    = 50;          end  
+if ~isfield(opt,'MaxNiter'),    opt.MaxNiter    = 30;           end  
 % Newton iterations
 if ~isfield(opt,'NiterNewton'), opt.NiterNewton = 1;            end  
 % Convergence threshold
@@ -24,15 +24,8 @@ if ~isfield(opt,'Verbose'),     opt.Verbose     = 1;            end
 if ~isfield(opt,'DoCoReg'),     opt.DoCoReg     = true;         end  
 % Show one image, zoomed in
 if ~isfield(opt,'ShowZoomed'),  opt.ShowZoomed  = false;        end  
-% Different test-cases: 
-%   0. No testing
-%   1. brainweb (superres)
-%   2. brainweb (den)
-%   3. lena
-%   4. qmri
-if ~isfield(opt,'TestCase'),    opt.TestCase    = 1;            end  
 % Memory limit for when to allocate variables as niftis
-if ~isfield(opt,'MaxMem'),      opt.MaxMem      = 2048;         end 
+if ~isfield(opt,'MaxMem'),      opt.MaxMem      = 4096;         end 
 % Reconstruction voxel size, if 0, set to smallest available
 if ~isfield(opt,'VoxSize'),     opt.VoxSize     = 1;            end 
 % Downsample inplane resolution to 1 mm

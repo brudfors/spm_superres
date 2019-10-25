@@ -29,7 +29,7 @@ function oNii = spm_superres(pths,opt)
 % OPTIONS
 % LamScl      - Scaling of regularisation parameter (lambda)           [10]
 % RhoScl      - Scaling of step-size parameter (rho)                    [1]
-% MaxNiter    - Max number of iterations                               [50]
+% MaxNiter    - Max number of iterations                               [30]
 % NiterNewton - Newton iterations                                       [1]
 % Tolerance   - Convergence threshold                                [1e-4]
 % DoMTV       - Run either MTV or indepentend TV denoising           [true]
@@ -40,15 +40,9 @@ function oNii = spm_superres(pths,opt)
 % Verbose     - Show stuff                                              [1]
 % DoCoReg     - Do preprocessing (register)                          [true]
 % ShowZoomed  - Show one image, zoomed in                           [false]
-% MaxMem      - Memory limit to allocate variables as niftis         [2048]
+% MaxMem      - Memory limit to allocate variables as niftis         [4096]
 % VoxSize     - Reconstruction voxel size                               [1]
 %               If 0, set to smallest available
-% TestCase    - Different test-cases:                                   [0]
-%                   0. No testing
-%                   1. brainweb (superres)
-%                   2. brainweb (den)
-%                   3. lena
-%                   4. qmri
 % Inplane1mm  - Downsample inplane resolution to 1 mm                [true]
 % Denoise     - Do just denoising, without super-resolving          [false]
 %__________________________________________________________________________
@@ -65,7 +59,6 @@ function oNii = spm_superres(pths,opt)
 %__________________________________________________________________________
 % Copyright (C) 2018 Wellcome Centre for Human Neuroimaging
 
-if nargin < 1, pths = [];     end
 if nargin < 2, opt  = struct; end
 
 % Add required SPM toolboxes to path
@@ -98,7 +91,6 @@ DoCoReg     = opt.DoCoReg;
 ShowZoomed  = opt.ShowZoomed;
 MaxMem      = opt.MaxMem;
 VoxSize     = opt.VoxSize;
-TestCase    = opt.TestCase;
 Inplane1mm  = opt.Inplane1mm;
 Denoise     = opt.Denoise;
 
@@ -107,47 +99,10 @@ Denoise     = opt.Denoise;
 % rand(1);
 
 %---------------------------
-% Get input data
+% Parse input data
 %---------------------------
-
-if TestCase && isempty(pths)
-    
-    %---------------------------
-    % Different test-cases (for debugging/testing)
-    % Will not work unless you have access to certain data    
-    %---------------------------
         
-    imset = struct;
-    if     TestCase == 1 || TestCase == 2
-        imset.ImName = 'brainweb';        
-    elseif TestCase == 3
-        imset.ImName = 'lena';        
-    elseif TestCase == 4
-        imset.ImName = 'qmri';
-    end   
-    imset.LenaNoiseStd = 5*1e1;          % For 'lena', std of additive Gaussian noise
-    imset.BrainWebN    = 3;              % For 'brainweb', number of observations of each channel
-    imset.BrainWeb2D   = true;           % For 'brainweb', use 2D data
-    imset.BrainWebDen  = TestCase == 2;  % For 'brainweb', denoise or superres
-    imset.qmriNumRuns  = 3;              % For 'qmri', number of runs to use
-    imset.qmriNumC     = 12;             % For 'qmri', number of channels to use
-    imset.qmri2D       = true;           % For 'qmri', use 2D data    
-    
-    Inplane1mm = false;
-    DoCoReg    = false;
-    Verbose    = 2;
-    NumWorkers = 0;
-    
-    DirOut                = 'testing/output';
-    [Nii_x,Nii_y0,DirOut] = load_testdata(imset,DirOut);
-else
-    %---------------------------
-    % Real data
-    %---------------------------
-    
-    % Parse input
-    Nii_x = parse_input(pths);
-end
+Nii_x = parse_input(pths);
 
 %---------------------------
 % Estimate rigid alignment matrices
@@ -394,13 +349,6 @@ for it=1:MaxNiter
 end
 toc
 
-if ~isempty(Nii_y0)
-    % For 'lena', show RGB images
-    show_stuff(Nii_y0,'y',1,Verbose,ShowZoomed,true);
-    show_stuff(Nii_x, 'x',2,Verbose,ShowZoomed,true);
-    show_stuff(Nii_y, 'yhat',4,Verbose,ShowZoomed,true);
-end
-
 if WriteTmpNii    
     % Clean-up temp files
     for c=1:C    
@@ -411,7 +359,10 @@ if WriteTmpNii
     end
 end
 
+%---------------------------
 % Make output
+%---------------------------
+
 if isa(Nii_y{1},'nifti')            
     oNii = nifti;
     for c=1:C
