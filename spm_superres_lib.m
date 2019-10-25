@@ -292,7 +292,8 @@ if Verbose >= 2
             plot(info{c}(n).x(:),info{c}(n).h/sum(info{c}(n).h)/info{c}(n).md,'b.', ...
                  info{c}(n).x(:),info{c}(n).sp,'r', ...
                  info{c}(n).x(:),info{c}(n).p,'--'); 
-             
+            set(gca,'ytick',[])
+
 %             FontSize = 18;
 %             set(gcf, 'Color', 'w')
 %             set(gca,'FontSize',FontSize)

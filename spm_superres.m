@@ -128,9 +128,9 @@ end
 % Show input
 spm_superres_lib('show_stuff',Nii_y0,'y',1,Verbose,ShowZoomed);
 if dat(1).A(1).do_pm
-    spm_superres_lib('show_stuff',Nii_x, ['x (C=' num2str(C) ' N=' num2str(N0) ')'],2,Verbose,true);
+    spm_superres_lib('show_stuff',Nii_x, ['x (C=' num2str(C) ' N0=' num2str(N0) ')'],2,Verbose,true);
 else
-    spm_superres_lib('show_stuff',Nii_x, ['x (C=' num2str(C) ' N=' num2str(N0) ')'],2,Verbose,ShowZoomed);
+    spm_superres_lib('show_stuff',Nii_x, ['x (C=' num2str(C) ' N0=' num2str(N0) ')'],2,Verbose,ShowZoomed);
 end
 
 %---------------------------
