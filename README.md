@@ -23,7 +23,7 @@ With Docker ([https://docs.docker.com/get-started/](https://docs.docker.com/get-
 
 2. Open an spm_superres container: 
 
-     `docker run -ti --rm -v [PTH-IN]:/input mbrud/spm_superres` 
+     `docker run -dit -v [PTH-IN]:/input mbrud/spm_superres` 
      
    where `[PTH-IN]` is the full path to a directory containing a set of subject MR images.
 
