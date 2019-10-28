@@ -23,27 +23,15 @@ With Docker ([https://docs.docker.com/get-started/](https://docs.docker.com/get-
 
 2. Open an spm_superres container: 
 
-     `docker run -dit -v [PTH-IN]:/input mbrud/spm_superres` 
+     `docker run -ti --rm -v [PTH-IN]:/input mbrud/spm_superres` 
      
-   where `[PTH-IN]` is the full path to a directory containing a set of subject MR images.
+   where `[PTH-IN]` is the full path to a directory containing a set of subject MR images (OBS: all NIfTIs will be read from this folder, so make sure that it only contains images you want super-resolved).
 
-3. Execute the super-resolution command in the container: 
+3. Execute the following command in the container: 
 
-     `docker exec [ID] /opt/spm12/spm12 function spm_superres input`
+     `/opt/spm12/spm12 function spm_superres input`
 
-   where `[ID]` is the container id (get it using the `docker ps` command).
-
-4. Copy container's `/input` folder to your local machine: 
-
-     `docker cp [ID]:/input [PTH-OUT]`
-
-   where `[PTH-OUT]` is the full path to the directory where you want the super-resolved images. The super-resolved images are prefixed `'y'`.
-
-5. Finally, shut down the running container: 
-
-     `docker stop [ID]`
-     
-     `docker rm -v [ID]`
+4. When the algorithm has finished, you will find the super-resolved images in the `[PTH-IN]` folder, prefixed `'y'`.
 
 ## Using MATLAB
 
