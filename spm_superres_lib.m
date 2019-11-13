@@ -84,7 +84,7 @@ for c=1:C
     else
         f = ['img' num2str(c) '.nii'];
     end
-    [pth,nam] = fileparts(f);
+    [pth,nam] = fileparts(char(f));
             
     if ~isempty(DirOut)
         pth = DirOut;
