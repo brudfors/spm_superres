@@ -33,6 +33,10 @@ With Docker ([https://docs.docker.com/get-started/](https://docs.docker.com/get-
 
 4. When the algorithm has finished, you will find the super-resolved images in the `[PTH-IN]` folder, prefixed `'y'`.
 
+**OBS!** This algorithm can end up using A LOT of RAM. If you are running the Docker version on a Mac, the default memory allocation is just 2GB, which can lead to a cryptic *killed* error message in the terminal. Increasing the available docker memory can help:
+
+https://stackoverflow.com/questions/44417159/docker-process-killed-with-cryptic-killed-message
+
 ## Using MATLAB
 
 If you want to change model parameters (e.g., the super-resolved images' voxel size, or increase the regularisation) or modify the code itself you will need to run it using MATLAB. If so, then just pull/download the code from this repository onto your computer. Make sure that the SPM12 software is on Matlab's path. The most recent version of SPM12 can be downloaded from [www.fil.ion.ucl.ac.uk/spm](http://www.fil.ion.ucl.ac.uk/spm/). If you get error messages when running the code, it is probably because your SPM version is too old. 
