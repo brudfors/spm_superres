@@ -53,6 +53,15 @@ spm_superres(P);
 ~~~~
 Output images are written to the same folder as the input images, prefixed `'y'`.
 
+### Improved runtime (Linux and Mac)
+
+For a faster algorithm, consider compiling SPM with OpenMP support. Just go to the *src* folder of SPM and do:
+```
+make distclean
+make USE_OPENMP=1
+make install
+```
+
 ## License
 
 This software is released under the [GNU General Public License version 3](LICENSE) (GPL v3). As a result, you may copy, distribute and modify the software as long as you track changes/dates in source files. Any modifications to or software including (via compiler) GPL-licensed code must also be made available under the GPL along with build & install instructions.
