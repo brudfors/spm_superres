@@ -18,18 +18,20 @@ The code is based on the algorithm described in the papers:
 With Docker ([https://docs.docker.com/get-started/](https://docs.docker.com/get-started/)) installed on your system, use the following steps to super-resolve a set of subject MRI scans to 1 mm isotropic voxel size:
 
 1. Get the spm_superres Docker image: 
-
-     `docker pull mbrud/spm_superres`
+``` bash
+docker pull mbrud/spm_superres
+```
 
 2. Open an spm_superres container: 
-
-     `docker run -ti --rm -v [PTH-IN]:/input mbrud/spm_superres` 
-     
-   where `[PTH-IN]` is the full path to a directory containing a set of subject MR images (OBS: all NIfTIs will be read from this folder, so make sure that it only contains images you want super-resolved).
+``` bash
+docker run -ti --rm -v [PTH-IN]:/input mbrud/spm_superres
+```  
+where `[PTH-IN]` is the full path to a directory containing a set of subject MR images (OBS: all NIfTIs will be read from this folder, so make sure that it only contains images you want super-resolved).
 
 3. Execute the following command in the container: 
-
-     `/opt/spm12/spm12 function spm_superres input`
+``` bash
+/opt/spm12/spm12 function spm_superres input
+```
 
 4. When the algorithm has finished, you will find the super-resolved images in the `[PTH-IN]` folder, prefixed `'y'`.
 
@@ -42,7 +44,7 @@ https://stackoverflow.com/questions/44417159/docker-process-killed-with-cryptic-
 If you want to change model parameters (e.g., the super-resolved images' voxel size, or increase the regularisation) or modify the code itself you will need to run it using MATLAB. If so, then just pull/download the code from this repository onto your computer. Make sure that the SPM12 software is on Matlab's path. The most recent version of SPM12 can be downloaded from [www.fil.ion.ucl.ac.uk/spm](http://www.fil.ion.ucl.ac.uk/spm/). If you get error messages when running the code, it is probably because your SPM version is too old. 
 
 The following is an example of super-resolving three MR scans of a subject to 1 mm isotropic voxel size:
-~~~~
+``` matlab
 % Paths to some MR images of the same patient (in nifti format)
 P    = cell(1,3);
 P{1} = 'MRI-contrast1.nii';
@@ -50,16 +52,15 @@ P{2} = 'MRI-contrast2.nii';
 P{3} = 'MRI-contrast3.nii';
 
 spm_superres(P);
-~~~~
+```
 Output images are written to the same folder as the input images, prefixed `'y'`.
 
 ### Improved runtime (Linux and Mac)
 
 For a faster algorithm, consider compiling SPM with OpenMP support. Just go to the *src* folder of SPM and do:
-```
+``` bash
 make distclean
-make USE_OPENMP=1
-make install
+make USE_OPENMP=1 && install
 ```
 
 ## License
