@@ -60,7 +60,7 @@ Output images are written to the same folder as the input images, prefixed `'y'`
 For a faster algorithm, consider compiling SPM with OpenMP support. Just go to the *src* folder of SPM and do:
 ``` bash
 make distclean
-make USE_OPENMP=1 && install
+make USE_OPENMP=1 && make install
 ```
 
 ## License
