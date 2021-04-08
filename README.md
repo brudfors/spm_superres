@@ -1,5 +1,7 @@
 # A Tool for Super-Resolving Multimodal Clinical MRI
 
+<span style="color:blue">**NEW: Python version (using PyTorch) now available from: https://github.com/brudfors/UniRes**</span>
+
 Multi-channel total variation (MTV) super-resolution of magnetic resonance imaging (MRI) data. The tool can be run either as a Docker image or MATLAB (using SPM12).
 
 The code is based on the algorithm described in the papers:
