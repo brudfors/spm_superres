@@ -280,7 +280,7 @@ for it=1:MaxNiter
         parfor (c=1:C,NumWorkers)    
             w  = spm_superres_lib('get_nii',Nii_w{c});
             Dy = spm_superres_lib('get_nii',Nii_Dy{c});
-            z  = mtv.*(Dy + w/rho);
+            z = bsxfun(@times, mtv, (Dy + w/rho));
             
             % Update nii
             Nii_z{c} = spm_superres_lib('put_nii',Nii_z{c},z);
